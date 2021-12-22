@@ -15,10 +15,17 @@ const auth = require('./routes/auth');
 const express = require('express');
 const app = express();
 
-process.on('uncaughtException', (ex)=> {
-    console.log('WE GOT AN UNCAUGHT EXCEPTION');
-    winston.error(ex.message, ex)
-});
+// process.on('uncaughtException', (ex)=> {
+//     console.log('WE GOT AN UNCAUGHT EXCEPTION');
+//     winston.error(ex.message, ex);
+//     process.exit(1);
+// });
+
+// process.on('unhandledRejection', (ex)=> {
+//     console.log('WE GOT AN UNHANDLED REJECTION');
+//     winston.error(ex.message, ex);
+//     process.exit(1);
+// });
 
 winston.add(winston.transports.File, { filename: 'logfile.log' });
 winston.add(winston.transports.MongoDB, { 
@@ -26,7 +33,13 @@ winston.add(winston.transports.MongoDB, {
     level: 'error'
 });
 
-throw new Error('Something failed during startup');
+winston.handleExceptions(new winston.transports.File({ filename: 'uncaughtExceptions.log'}));
+
+process.on('unhandledRejection', (ex)=> {
+    throw ex;
+});
+
+// const p = Promise.reject(new Error('Something failed miserably'));
 
 app.use(express.json());
 
